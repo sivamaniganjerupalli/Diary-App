@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Diary</title>
+    <style>
+        /* General Styles */
+body {
+    font-family: 'Georgia', serif;
+    background: url('https://thumbs.dreamstime.com/b/old-books-wooden-table-candlelight-old-books-wooden-table-candlelight-276048563.jpg') no-repeat center center/cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    position: relative;
+}
+
+/* Book-Like Container */
+.container {
+    background: rgba(255, 253, 208, 0.92);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    border-left: 8px solid #8b4513;  /* Spine effect */
+    border-right: 8px solid #8b4513;
+    animation: fadeIn 1s ease-in-out;
+}
+
+/* Header Styling */
+h1 {
+    font-size: 2rem;
+    color: #4d3319;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 10px;
+}
+
+/* Input Fields */
+input, textarea {
+    width: 95%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 2px solid #a0522d;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: rgba(255, 253, 208, 0.6);
+    color: #4d3319;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border: 3px solid #8b4513;
+}
+
+/* Buttons */
+.animated-button {
+    background: linear-gradient(90deg, #c27b56, #9e4b34);
+    border: none;
+    color: white;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: transform 0.2s ease-in-out, background 0.3s;
+}
+
+.animated-button:hover {
+    transform: scale(1.07);
+    background: linear-gradient(90deg, #9e4b34, #7a3322);
+}
+
+/* Logout Button */
+.logout-button {
+    background: #d9534f;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.logout-button:hover {
+    background: #c9302c;
+    transform: scale(1.05);
+}
+
+/* Textarea */
+textarea {
+    height: 150px;
+    resize: none;
+}
+
+/* Diary Entries List */
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 20px;
+    text-align: left;
+}
+
+ul li {
+    background: rgba(255, 253, 208, 0.8);
+    margin: 8px 0;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+}
+
+ul li:hover {
+    background: rgba(160, 82, 45, 0.8);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .container {
+        width: 95%;
+        padding: 20px;
+    }
+
+    input, textarea {
+        font-size: 0.9rem;
+    }
+
+    .animated-button, .logout-button {
+        font-size: 0.9rem;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+    let users = JSON.parse(localStorage.getItem("users")) || {};
+    let currentUser = localStorage.getItem("currentUser") || null;
+
+    // Toggle between Login/Register
+    window.toggleAuth = function () {
+        let loginForm = document.getElementById("loginForm");
+        let registerForm = document.getElementById("registerForm");
+
+        if (loginForm.style.display === "none") {
+            loginForm.style.display = "block";
+            registerForm.style.display = "none";
+        } else {
+            loginForm.style.display = "none";
+            registerForm.style.display = "block";
+        }
+    };
+
+    // Register User
+    window.registerUser = function () {
+        let username = document.getElementById("registerUsername").value.trim();
+        let password = document.getElementById("registerPassword").value.trim();
+
+        if (!username || !password) {
+            alert("Please fill in all fields.");
+            return;
+        }
+
+        users = JSON.parse(localStorage.getItem("users")) || {};
+
+        if (users[username]) {
+            alert("User already exists! Try logging in.");
+            return;
+        }
+
+        users[username] = { password: password, diary: [] };
+        localStorage.setItem("users", JSON.stringify(users));
+
+        alert("Registration successful! Please log in.");
+        toggleAuth();
+    };
+
+    // Login User
+    window.loginUser = function () {
+        let username = document.getElementById("loginUsername").value.trim();
+        let password = document.getElementById("loginPassword").value.trim();
+
+        users = JSON.parse(localStorage.getItem("users")) || {};
+
+        if (users[username] && users[username].password === password) {
+            currentUser = username;
+            localStorage.setItem("currentUser", username);
+
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("diarySection").style.display = "block";
+            loadEntries();
+        } else {
+            alert("Invalid credentials. Please try again.");
+        }
+    };
+
+    // Logout User
+    window.logoutUser = function () {
+        currentUser = null;
+        localStorage.removeItem("currentUser");
+
+        document.getElementById("authSection").style.display = "block";
+        document.getElementById("diarySection").style.display = "none";
+    };
+
+    // Save Diary Entry
+    window.saveEntry = function () {
+        if (!currentUser) return;
+
+        let text = document.getElementById("entry").value.trim();
+        if (text === "") {
+            alert("Entry cannot be empty!");
+            return;
+        }
+
+        let entry = {
+            date: new Date().toLocaleString(),
+            content: text
+        };
+
+        users = JSON.parse(localStorage.getItem("users")) || {};
+        users[currentUser].diary.push(entry);
+        localStorage.setItem("users", JSON.stringify(users));
+
+        document.getElementById("entry").value = "";
+        loadEntries();
+    };
+
+    // Load Previous Entries
+    function loadEntries() {
+        let entriesList = document.getElementById("entriesList");
+        entriesList.innerHTML = "";
+
+        users = JSON.parse(localStorage.getItem("users")) || {};
+
+        if (users[currentUser] && users[currentUser].diary.length > 0) {
+            users[currentUser].diary.forEach((entry, index) => {
+                let listItem = document.createElement("li");
+                listItem.innerHTML = `<strong>${entry.date}</strong>`;
+                listItem.onclick = function () {
+                    showEntry(index);
+                };
+                entriesList.appendChild(listItem);
+            });
+        }
+    }
+
+    // Display Full Entry
+    function showEntry(index) {
+        let entry = users[currentUser].diary[index];
+        document.getElementById("entry").value = entry.content;
+    }
+
+    // If user is logged in, load diary directly
+    if (currentUser) {
+        document.getElementById("authSection").style.display = "none";
+        document.getElementById("diarySection").style.display = "block";
+        loadEntries();
+    }
+});
+
+
+    </script>
+    
+    <!-- BACKGROUND IMAGE CONTAINER -->
+    <div class="background-container"></div>
+
+    <!-- MAIN DIARY CONTAINER -->
+    <div class="container">
+        <!-- LOGIN / REGISTER SECTION -->
+        <div id="authSection">
+            <h1 class="fade-in">🔐 My Diary</h1>
+            
+            <!-- LOGIN FORM -->
+            <div id="loginForm">
+                <h2>Login</h2>
+                <input type="text" id="loginUsername" placeholder="Username">
+                <input type="password" id="loginPassword" placeholder="Password">
+                <button onclick="loginUser()" class="animated-button">🔓 Login</button>
+                <p>New here? <a href="#" onclick="toggleAuth()">Register</a></p>
+            </div>
+
+            <!-- REGISTER FORM (Initially Hidden) -->
+            <div id="registerForm" style="display: none;">
+                <h2>Register</h2>
+                <input type="text" id="registerUsername" placeholder="Username">
+                <input type="password" id="registerPassword" placeholder="Password">
+                <button onclick="registerUser()" class="animated-button">📝 Register</button>
+                <p>Already have an account? <a href="#" onclick="toggleAuth()">Login</a></p>
+            </div>
+        </div>
+
+        <!-- DIARY ENTRY SECTION (Hidden initially) -->
+        <div id="diarySection" style="display: none;">
+            <h1 class="fade-in">📖 My Diary</h1>
+            <textarea id="entry" placeholder="Write your thoughts..."></textarea>
+            <button onclick="saveEntry()" class="animated-button">💾 Save Entry</button>
+
+            <h2 class="fade-in">📜 Previous Entries</h2>
+            <ul id="entriesList"></ul>
+
+            <button onclick="logoutUser()" class="logout-button">🚪 Logout</button>
+        </div>
+    </div>
+
+</body>
+</html>
